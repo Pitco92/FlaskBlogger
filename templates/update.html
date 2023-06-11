@@ -12,12 +12,12 @@
 {% endfor %}
 
 {% if name %}
-    <h1>User added!</h1>
+    <h1>Update user</h1>
     <br/><br/>
     <table class="table table-hover table-bordered table-striped">
         {% for our_user in our_users %}
             <tr>
-            <td>{{ our_user.id }}. <a href="{{ url_for('update', id=our_user.id) }}">{{ our_user.name }}</a> - {{ 
+            <td>{{ our_user.id }}. {{ our_user.name }} - {{ 
                 our_user.email }}</td>
             </tr>
         {% endfor %}
@@ -26,10 +26,10 @@
     <br/><br/>
 
 {% else %}
-    <h1>User List:</h1>
+    <h1>Update user...</h1>
     <br/>
     <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
-        <form method="POST">
+        <form action="/update/{{ name_to_update.id }}" method="POST">
             {{ form.hidden_tag() }}
 
             {{ form.name.label(
@@ -37,7 +37,8 @@
             ) }}
 
             {{ form.name(
-                class="form-control"
+                class="form-control",
+                value=name_to_update.name
             ) }}
 
             <br/>
@@ -47,7 +48,8 @@
             ) }}
 
             {{ form.email(
-                class="form-control"
+                class="form-control",
+                value=name_to_update.email
             ) }}
 
             <br/>
@@ -58,14 +60,6 @@
     </div>
 
 <br/><br/><br/>
-<table class="table table-hover table-bordered table-striped">
-    {% for our_user in our_users %}
-        <tr>
-        <td>{{ our_user.id }}. <a href="{{ url_for('update', id=our_user.id) }}">{{ our_user.name }}</a> - {{ 
-            our_user.email }}</td>
-        </tr>
-    {% endfor %}
-</table>
 
 {% endif %}
 
