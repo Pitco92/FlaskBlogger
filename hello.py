@@ -12,10 +12,16 @@ load_dotenv()
 
 # Create a Flask instance
 app = Flask(__name__)
+
+# old SQLite database
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+
 # add database
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://" + os.environ['DB_USER'] + ":" + os.environ['DB_PASS'] + "@" + os.environ['DB_HOST'] + "/blogusers"
+
 # secret key
 app.config['SECRET_KEY'] = os.environ['APP_KEY']
+
 # Initialize the database
 db = SQLAlchemy(app)
 
