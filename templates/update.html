@@ -18,7 +18,7 @@
         {% for our_user in our_users %}
             <tr>
             <td>{{ our_user.id }}. {{ our_user.name }} - {{ 
-                our_user.email }}</td>
+                our_user.email }} - {{ our_user.favorite_color }}</td>
             </tr>
         {% endfor %}
     </table>
@@ -53,9 +53,23 @@
             ) }}
 
             <br/>
+
+            {{ form.favorite_color.label(
+                class="form-label"
+            ) }}
+
+            {{ form.favorite_color(
+                class="form-control",
+                value=name_to_update.favorite_color
+            ) }}
+
+            <br/>
             {{ form.submit(
                 class="btn btn-outline-primary"
             ) }}
+
+            <a href="{{ url_for('delete', id=id) }}" class="btn btn-outline-danger">Delete</a>
+
         </form>
     </div>
 
