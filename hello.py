@@ -8,6 +8,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import desc
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from dotenv.main import load_dotenv
 import os
 
@@ -30,6 +31,15 @@ app.config['SECRET_KEY'] = os.environ['APP_KEY']
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+# Manage Logins
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+@login_manager.user_loader
+def load_user(user_id):
+    return Users.query.get(int(user_id))
+
 # Create blog post model
 class Posts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -48,8 +58,9 @@ class PostForm(FlaskForm):
     submit = SubmitField("Submit")
 
 # Create Model
-class Users(db.Model):
+class Users(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), nullable=False, unique=True)
     name = db.Column(db.String(200), nullable=False)
     email = db.Column(db.String(120), nullable=False, unique=True)
     favorite_color = db.Column(db.String(120))
@@ -75,6 +86,7 @@ class Users(db.Model):
 #create a form class
 class UserForm(FlaskForm):
     name = StringField("Name", validators=[DataRequired()])
+    username = StringField("Username", validators=[DataRequired()])
     email = StringField("Email", validators=[DataRequired()])
     favorite_color = StringField("Favorite color")
     password_hash = PasswordField("Password", validators=[DataRequired(), EqualTo('password_hash2', message='password must match')])
@@ -90,6 +102,11 @@ class NamerForm(FlaskForm):
 class PasswordForm(FlaskForm):
     email = StringField("What is your email?", validators=[DataRequired()])
     password_hash = PasswordField("What is your password?", validators=[DataRequired()])
+    submit = SubmitField("Submit")
+
+class LoginForm(FlaskForm):
+    username = StringField("Username", validators=[DataRequired()])
+    password = PasswordField("Password", validators=[DataRequired()])
     submit = SubmitField("Submit")
 
 # Create a route decorator
@@ -110,11 +127,12 @@ def add_user():
         if user is None:
             # Hash the password
             hashed_pw = generate_password_hash(form.password_hash.data, "sha256")
-            user = Users(name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data, password_hash=hashed_pw)
+            user = Users(username=form.username.data, name=form.name.data, email=form.email.data, favorite_color=form.favorite_color.data, password_hash=hashed_pw)
             db.session.add(user)
             db.session.commit()
         name = form.name.data
         form.name.data = ''
+        form.username.data = ''
         form.email.data = ''
         form.favorite_color.data = ''
         form.password_hash.data = ''
@@ -246,6 +264,7 @@ def delete(id):
 
 # Add Post Page
 @app.route('/add-post', methods=["GET", "POST"])
+#@login_required
 def add_post():
     form = PostForm()
 
@@ -280,6 +299,7 @@ def post(id):
     return render_template("post.html", post=post)
 
 @app.route('/posts/edit/<int:id>', methods=['GET', 'POST'])
+@login_required
 def edit_post(id):
     post = Posts.query.get_or_404(id)
     form = PostForm()
@@ -320,3 +340,35 @@ def delete_post(id):
         
         posts = Posts.query.order_by(desc(Posts.date_posted))
         return render_template("posts.html", posts=posts)
+    
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+
+    if form.validate_on_submit():
+        user = Users.query.filter_by(username=form.username.data).first()
+        if user:
+            #chech pass hash
+            if check_password_hash(user.password_hash, form.password.data):
+                login_user(user)
+                return redirect(url_for('dashboard'))
+            else:
+                flash("Wrong password - Do you try to hack?!")
+        else:
+            flash("User does not exist - Nice try buddy.")
+
+    return render_template('login.html', form=form)
+
+# Create logout page
+@app.route('/logout', methods=['GET', 'POST'])
+@login_required
+def logout():
+    logout_user()
+    flash("You are logged out - Bye")
+    return redirect(url_for('login'))
+
+@app.route('/dashboard', methods=['GET', 'POST'])
+@login_required
+def dashboard():
+    form = LoginForm()
+    return render_template('dashboard.html')

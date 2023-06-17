@@ -11,6 +11,7 @@
 
 {% endfor %}
 
+{% if current_user.is_authenticated %}
 
 <h1>Add blog post</h1>
     <br/>
@@ -63,6 +64,12 @@
         </form>
     </div>
 
+{% else %}
+
+    <h2>You must be logged in</h2>
+    <p>Sorry, this is not allowed for peasants. You need to be a registered user to add a post, and ofcourse you need to login.</p>
+
+{% endif %}
 
 {% endblock %}
 
