@@ -1,9 +1,11 @@
-from flask import Flask, render_template, flash, request
+from flask import Flask, render_template, flash, request, redirect, url_for
 from flask_wtf import FlaskForm
 from wtforms import StringField, SubmitField, PasswordField, BooleanField, ValidationError
 from wtforms.validators import DataRequired, EqualTo, Length
+from wtforms.widgets import TextArea
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import desc
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv.main import load_dotenv
@@ -27,6 +29,23 @@ app.config['SECRET_KEY'] = os.environ['APP_KEY']
 # Initialize the database
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+# Create blog post model
+class Posts(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(255))
+    content = db.Column(db.Text)
+    author = db.Column(db.String(255))
+    date_posted = db.Column(db.DateTime, default=datetime.utcnow)
+    slug = db.Column(db.String(255))
+
+# Create a post form
+class PostForm(FlaskForm):
+    title = StringField("Title", validators=[DataRequired()])
+    content = StringField("Content", validators=[DataRequired()], widget=TextArea())
+    author = StringField("Author", validators=[DataRequired()])
+    slug = StringField("Slug", validators=[DataRequired()])
+    submit = SubmitField("Submit")
 
 # Create Model
 class Users(db.Model):
@@ -224,3 +243,80 @@ def delete(id):
                                form = form,
                                name = name,
                                our_users = our_users)
+
+# Add Post Page
+@app.route('/add-post', methods=["GET", "POST"])
+def add_post():
+    form = PostForm()
+
+    if form.validate_on_submit():
+        post = Posts(title=form.title.data, content=form.content.data, author=form.author.data, slug=form.slug.data)
+        # Clear the form
+        form.title.data = ""
+        form.content.data = ""
+        form.author.data = ""
+        form.slug.data = ""
+
+        #Add post data to database
+        db.session.add(post)
+        db.session.commit()
+
+        #return a message
+        flash("Post is submitted succesfully")
+
+    #redirect to webpage
+    return render_template("add_post.html", form=form)
+
+# View post page
+@app.route('/posts')
+def posts():
+
+    posts = Posts.query.order_by(desc(Posts.date_posted))
+    return render_template("posts.html", posts=posts)
+
+@app.route('/posts/<int:id>')
+def post(id):
+    post = Posts.query.get_or_404(id)
+    return render_template("post.html", post=post)
+
+@app.route('/posts/edit/<int:id>', methods=['GET', 'POST'])
+def edit_post(id):
+    post = Posts.query.get_or_404(id)
+    form = PostForm()
+
+    if form.validate_on_submit():
+        post.title = form.title.data
+        post.content = form.content.data
+        post.author = form.author.data
+        post.slug = form.slug.data
+
+        #Update DB
+        db.session.add(post)
+        db.session.commit()
+        flash("Post has been updated!")
+        return redirect(url_for('post', id=post.id))
+    
+    form.title.data = post.title
+    form.content.data = post.content
+    form.author.data = post.author
+    form.slug.data = post.slug
+    return render_template('edit_post.html', form=form)
+
+@app.route('/posts/delete/<int:id>')
+def delete_post(id):
+    post_to_delete = Posts.query.get_or_404(id)
+    
+    try:
+        db.session.delete(post_to_delete)
+        db.session.commit()
+
+        flash("Post deleted, i hope you know what you did ...")
+
+        posts = Posts.query.order_by(desc(Posts.date_posted))
+        return render_template("posts.html", posts=posts)
+
+    except:
+        flash("Whoops, there was a problem with deleting your post. But you did your best and that is what count!")
+        
+        posts = Posts.query.order_by(desc(Posts.date_posted))
+        return render_template("posts.html", posts=posts)
