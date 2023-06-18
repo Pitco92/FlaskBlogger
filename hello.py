@@ -196,11 +196,12 @@ def add_post():
     form = PostForm()
 
     if form.validate_on_submit():
-        post = Posts(title=form.title.data, content=form.content.data, author=form.author.data, slug=form.slug.data)
+        poster = current_user.id
+        post = Posts(title=form.title.data, content=form.content.data, poster_id = poster, slug=form.slug.data)
         # Clear the form
         form.title.data = ""
         form.content.data = ""
-        form.author.data = ""
+        #form.author.data = ""
         form.slug.data = ""
 
         #Add post data to database
@@ -234,7 +235,7 @@ def edit_post(id):
     if form.validate_on_submit():
         post.title = form.title.data
         post.content = form.content.data
-        post.author = form.author.data
+        #post.author = form.author.data
         post.slug = form.slug.data
 
         #Update DB
@@ -243,28 +244,41 @@ def edit_post(id):
         flash("Post has been updated!")
         return redirect(url_for('post', id=post.id))
     
-    form.title.data = post.title
-    form.content.data = post.content
-    form.author.data = post.author
-    form.slug.data = post.slug
-    return render_template('edit_post.html', form=form)
-
-@app.route('/posts/delete/<int:id>')
-def delete_post(id):
-    post_to_delete = Posts.query.get_or_404(id)
-    
-    try:
-        db.session.delete(post_to_delete)
-        db.session.commit()
-
-        flash("Post deleted, i hope you know what you did ...")
-
+    if current_user.id == post.poster_id:
+        form.title.data = post.title
+        form.content.data = post.content
+        #form.author.data = post.author
+        form.slug.data = post.slug
+        return render_template('edit_post.html', form=form)
+    else:
+        flash("You are not allowed to edit this post")
         posts = Posts.query.order_by(desc(Posts.date_posted))
         return render_template("posts.html", posts=posts)
 
-    except:
-        flash("Whoops, there was a problem with deleting your post. But you did your best and that is what count!")
+@app.route('/posts/delete/<int:id>')
+@login_required
+def delete_post(id):
+    post_to_delete = Posts.query.get_or_404(id)
+    id = current_user.id
+    if id == post_to_delete.poster.id:   
+        try:
+            db.session.delete(post_to_delete)
+            db.session.commit()
+
+            flash("Post deleted, i hope you know what you did ...")
+
+            posts = Posts.query.order_by(desc(Posts.date_posted))
+            return render_template("posts.html", posts=posts)
+
+        except:
+            flash("Whoops, there was a problem with deleting your post. But you did your best and that is what count!")
+            
+            posts = Posts.query.order_by(desc(Posts.date_posted))
+            return render_template("posts.html", posts=posts)
         
+    else:
+        flash("You are not allowed to delete this post")
+
         posts = Posts.query.order_by(desc(Posts.date_posted))
         return render_template("posts.html", posts=posts)
     
@@ -328,9 +342,11 @@ class Posts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
     content = db.Column(db.Text)
-    author = db.Column(db.String(255))
+    #author = db.Column(db.String(255))
     date_posted = db.Column(db.DateTime, default=datetime.utcnow)
     slug = db.Column(db.String(255))
+    # Couple user to post
+    poster_id = db.Column(db.Integer, db.ForeignKey("users.id"))
 
 # Create Model
 class Users(db.Model, UserMixin):
@@ -342,6 +358,7 @@ class Users(db.Model, UserMixin):
     date_added = db.Column(db.DateTime, default=datetime.utcnow)
     # Do some password stuff
     password_hash = db.Column(db.String(128))
+    posts = db.relationship("Posts", backref='poster')
 
     @property
     def password(self):
