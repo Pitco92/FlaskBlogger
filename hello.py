@@ -5,7 +5,7 @@ from sqlalchemy import desc
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from webforms import LoginForm, PostForm, UserForm, PasswordForm, NamerForm
+from webforms import LoginForm, PostForm, UserForm, NamerForm, PasswordForm
 from dotenv.main import load_dotenv
 import os
 
@@ -14,9 +14,6 @@ load_dotenv()
 
 # Create a Flask instance
 app = Flask(__name__)
-
-# old SQLite database
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///users.db'
 
 # add database
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://" + os.environ['DB_USER'] + ":" + os.environ['DB_PASS'] + "@" + os.environ['DB_HOST'] + "/blogusers"
@@ -141,6 +138,7 @@ def test_pw():
 
 # Upodate DB record
 @app.route("/update/<int:id>", methods=['GET', 'POST'])
+@login_required
 def update(id):
     form = UserForm()
     name_to_update = Users.query.get_or_404(id)
@@ -325,8 +323,6 @@ def dashboard():
                                    name_to_update = name_to_update,
                                    id = id)
     
-
-
 # Create blog post model
 class Posts(db.Model):
     id = db.Column(db.Integer, primary_key=True)

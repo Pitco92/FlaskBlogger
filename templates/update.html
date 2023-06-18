@@ -11,23 +11,10 @@
 
 {% endfor %}
 
-{% if name %}
-    <h1>Update user</h1>
-    <br/><br/>
-    <table class="table table-hover table-bordered table-striped">
-        {% for our_user in our_users %}
-            <tr>
-            <td>{{ our_user.id }}. {{ our_user.name }} - {{ 
-                our_user.email }} - {{ our_user.favorite_color }}</td>
-            </tr>
-        {% endfor %}
-    </table>
-   
-    <br/><br/>
+{% if id == current_user.id %}
 
-{% else %}
     <h1>Update user...</h1>
-    <br/>
+    <br/><br/>
     <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
         <form action="/update/{{ name_to_update.id }}" method="POST">
             {{ form.hidden_tag() }}
@@ -85,6 +72,16 @@
     </div>
 
 <br/><br/><br/>
+
+{% else %}
+
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        You are not allowed edit this user. Who do you think you are? God?
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <h1>Access denied for peasants</h1>
+    <p>What do i have to say more?</p>
 
 {% endif %}
 
