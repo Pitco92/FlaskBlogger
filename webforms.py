@@ -38,3 +38,8 @@ class PasswordForm(FlaskForm):
     email = StringField("What is your email?", validators=[DataRequired()])
     password_hash = PasswordField("What is your password?", validators=[DataRequired()])
     submit = SubmitField("Submit")
+
+# Create a search form
+class SearchForm(FlaskForm):
+    searched = StringField("Searched", validators=[DataRequired()])
+    submit = SubmitField("Submit")

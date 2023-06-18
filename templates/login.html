@@ -18,23 +18,14 @@
     <form method="POST">
         {{ form.hidden_tag() }}
 
-        {{ form.username.label(
-            class="form-label"
-        ) }}
-
-        {{ form.username(
-            class="form-control"
-        ) }}
-
-        <br/>
-
-        {{ form.password.label(
-            class="form-label"
-        ) }}
-
-        {{ form.password(
-            class="form-control"
-        ) }}
+        <div class="form-floating mb-3">
+            <input class="form-control" id="floatingInput" placeholder="user" name="username">
+            <label for="floatingInput">Username</label>
+        </div>
+        <div class="form-floating">
+            <input type="password" class="form-control" id="floatingPassword" placeholder="Password" name="password">
+            <label for="floatingPassword">Password</label>
+        </div>
 
         <br/>
         {{ form.submit(

@@ -5,7 +5,7 @@ from sqlalchemy import desc
 from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
-from webforms import LoginForm, PostForm, UserForm, NamerForm, PasswordForm
+from webforms import LoginForm, PostForm, UserForm, NamerForm, PasswordForm, SearchForm
 from dotenv.main import load_dotenv
 import os
 
@@ -33,6 +33,11 @@ login_manager.login_view = 'login'
 @login_manager.user_loader
 def load_user(user_id):
     return Users.query.get(int(user_id))
+
+@app.context_processor
+def base():
+    form = SearchForm()
+    return dict(form=form)
 
 # Create a route decorator
 @app.route('/')
@@ -336,7 +341,25 @@ def dashboard():
                                    form = form,
                                    name_to_update = name_to_update,
                                    id = id)
-    
+
+# Search function
+@app.route('/search', methods=['POST'])
+def search():
+    form = SearchForm()
+    posts = Posts.query
+    if form.validate_on_submit():
+        # Get data from search bar
+        post.searched = form.searched.data
+
+        # Query the database
+        posts = posts.filter(Posts.content.like('%' + post.searched + '%'))
+        posts = posts.order_by(Posts.title).all()
+
+        return render_template("search.html", 
+                               form = form, 
+                               searched = post.searched,
+                               posts=posts)
+
 # Create blog post model
 class Posts(db.Model):
     id = db.Column(db.Integer, primary_key=True)
