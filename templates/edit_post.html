@@ -12,7 +12,7 @@
 {% endfor %}
 
 
-<h1>Add blog post</h1>
+<h1>Edit blog post</h1>
     <br/>
     <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
         <form method="POST">
@@ -51,6 +51,8 @@
                 class="btn btn-outline-primary"
             ) }}
         </form>
+        {{ ckeditor.load() }}
+        {{ ckeditor.config(name='content') }}
     </div>
 
 

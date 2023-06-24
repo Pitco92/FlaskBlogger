@@ -52,6 +52,8 @@
                 class="btn btn-outline-primary"
             ) }}
         </form>
+        {{ ckeditor.load() }}
+        {{ ckeditor.config(name='content') }}
     </div>
 
 {% else %}

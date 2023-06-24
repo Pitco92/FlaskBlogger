@@ -6,6 +6,7 @@ from flask_migrate import Migrate
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user, current_user
 from webforms import LoginForm, PostForm, UserForm, NamerForm, PasswordForm, SearchForm
+from flask_ckeditor import CKEditor
 from dotenv.main import load_dotenv
 import os
 
@@ -14,6 +15,7 @@ load_dotenv()
 
 # Create a Flask instance
 app = Flask(__name__)
+ckeditor = CKEditor(app)
 
 # add database
 app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://" + os.environ['DB_USER'] + ":" + os.environ['DB_PASS'] + "@" + os.environ['DB_HOST'] + "/blogusers"
