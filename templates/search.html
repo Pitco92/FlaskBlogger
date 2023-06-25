@@ -3,12 +3,25 @@
 {% block content %}
 
     <br/>
-    <h2>Search results</h2>
+    <h2>Search results for "<em>{{ searched }}</em>"</h2>
 
-    {% for post in posts %}
+    {% if posts %}
 
-        <a href="{{ url_for('post', id=post.id) }}">{{ post.title }}</a><br/>
+        We found <em>{{ searched }}</em> in the following posts:<br/><br/>
 
-    {% endfor %}
+        {% for post in posts %}
+
+            <div class="shadow p-3 mb-5 bg-body-tertiary rounded">
+                <h2>{{ post.title }}</h2>
+                <small>by: {{ post.poster.name }}, posted on {{ post.date_posted }}</small> <br/><br/>
+                <a href=" {{ url_for('post', id=post.id) }}" class="btn btn-outline-primary btn-sm">View post</a>
+            </div>
+
+        {% endfor %}
+
+    {% else %}
+    It seems that we dit not found anything for "<em>{{ searched }}</em>". 
+
+    {% endif %}
 
 {% endblock %}
