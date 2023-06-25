@@ -25,7 +25,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+pymysql://" + os.environ['DB_USER
 # secret key
 app.config['SECRET_KEY'] = os.environ['APP_KEY']
 
-app.config['UPLOAD_FOLDER'] = os.environ['UPL_FOL']
+app.config['UPLOAD_FOLDER'] = 'static/images/'
 
 # Initialize the database
 db = SQLAlchemy(app)
